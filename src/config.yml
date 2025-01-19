@@ -1,0 +1,6 @@
+app:
+  name: Aura
+repos:
+  - owner: "Kavehrafie"
+    repo: "unboundedTerritories"
+    branch: "main"

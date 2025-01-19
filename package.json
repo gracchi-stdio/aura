@@ -10,10 +10,20 @@
   },
   "dependencies": {
     "@astrojs/tailwind": "^5.1.4",
+    "@octokit/rest": "^21.1.0",
     "astro": "^5.1.7",
-    "tailwindcss": "^3.4.17"
+    "gray-matter": "^4.0.3",
+    "rehype-stringify": "^10.0.1",
+    "remark-parse": "^11.0.0",
+    "remark-rehype": "^11.1.1",
+    "remark-stringify": "^11.0.0",
+    "remark-wikirefs": "^0.0.7-rm",
+    "tailwindcss": "^3.4.17",
+    "unified": "^11.0.5"
   },
   "devDependencies": {
-    "@tailwindcss/typography": "^0.5.16"
+    "@rollup/plugin-yaml": "^4.1.2",
+    "@tailwindcss/typography": "^0.5.16",
+    "@types/node": "^22.10.7"
   }
 }
