@@ -43,3 +43,18 @@ export type Note = {
     lable: string;
   }>;
 };
+
+export interface VaultReader {
+  listNotes(): Promise<VaultFile[]>;
+  getFrontmatter(entry: VaultFile): Promise<NoteFrontmatter>;
+  getContent(entry: VaultFile): Promise<Note>;
+}
+
+export interface NoteProcessor {
+  process(content: string, context: ProcessContext): Promise<string>;
+}
+
+export type ProcessContext = {
+  frontmatters: NoteFrontmatter[];
+  currentPath: string;
+};

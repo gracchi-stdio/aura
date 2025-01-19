@@ -1,14 +1,22 @@
 ---
-import { getAllNotes } from '@/lib/marksman';
+import { getCollection, getEntryBySlug } from 'astro:content';
+import { getConfig } from '../lib/config';
 import Layout from '../layouts/Layout.astro';
-import {getConfig} from '@/lib/config'
-const notes = await getAllNotes()
-const config = getConfig()
+
+const config = getConfig();
+const collections: Record<string, any[]> = {};
+
+// Load all collections
+for (const vault of config.vaults) {
+  try {
+    collections[vault.repo] = await getCollection(vault.repo);
+  } catch (error) {
+    console.error(`Error loading collection ${vault.repo}:`, error);
+    collections[vault.repo] = [];
+  }
+}
 ---
 <Layout>
-  <h1>Valut config</h1>
-  <pre>
-    {JSON.stringify(config)}
-  </pre>
+  <pre>{JSON.stringify(collections?.unboundedTerritories)}</pre>
 
 </Layout>
