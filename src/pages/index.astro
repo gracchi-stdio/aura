@@ -1,14 +1,15 @@
 ---
-import { getCollection, getEntryBySlug } from 'astro:content';
-import { getConfig } from '../lib/config';
-import Layout from '../layouts/Layout.astro';
-
+import { getCollection } from "astro:content";
+import { getConfig } from "../lib/config";
+import Layout from "../layouts/Layout.astro";
+import { slugify } from "@/utils";
 const config = getConfig();
 const collections: Record<string, any[]> = {};
 
 // Load all collections
 for (const vault of config.vaults) {
   try {
+    //@ts-ignore
     collections[vault.repo] = await getCollection(vault.repo);
   } catch (error) {
     console.error(`Error loading collection ${vault.repo}:`, error);
@@ -16,7 +17,15 @@ for (const vault of config.vaults) {
   }
 }
 ---
-<Layout>
-  <pre>{JSON.stringify(collections?.unboundedTerritories)}</pre>
 
+<Layout>
+  <ul>
+    {
+      config.vaults.map((vault) => (
+        <li>
+          <a href={`/${slugify(vault.repo)}`}>{vault.repo}</a>
+        </li>
+      ))
+    }
+  </ul>
 </Layout>

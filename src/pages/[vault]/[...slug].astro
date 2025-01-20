@@ -1,46 +1,54 @@
 ---
 import type { GetStaticPaths } from "astro";
-import {getConfig} from "@/lib/config"
+import { getConfig } from "@/lib/config";
 import { getCollection } from "astro:content";
-import { throws } from "assert";
 import Layout from "@/layouts/Layout.astro";
-import { log } from "console";
+import { render } from "astro:content";
+
 export const getStaticPaths = (async () => {
-  const { vaults } = getConfig()
-  const paths = []
+  const { vaults } = getConfig();
+  const paths = [];
 
-for (const vault of vaults)
-{
+  for (const vault of vaults) {
     try {
+      // @ts-ignore
+      const entries = await getCollection(vault.repo);
 
-    const entries = await getCollection(vault.repo)
-
-    paths.push(...entries.map(entry => ({
-      params: {
-        vault: vault.repo,
-        slug: entry.id,
-      },
-      props: {entry}
-      })))
-      
-    }
-    catch(error) {
-      console.error(`The vault collection: ${vault.repo} not available`)
+      const indexEntry = entries.find((entry) => entry.id === "index.md");
+      if (indexEntry) {
+        paths.push({
+          params: { vault: vault.repo, slug: undefined },
+          props: { entry: indexEntry },
+        });
+      }
+      paths.push(
+        ...entries
+          .filter((entry) => entry.id !== "index.md")
+          .map((entry) => ({
+            params: {
+              vault: vault.repo,
+              slug: entry?.data.slug,
+            },
+            props: { entry },
+          })),
+      );
+    } catch (error) {
+      console.error(`The vault collection: ${vault.repo} not available`);
     }
   }
 
-  console.log(paths)
-  return paths
+  return paths;
 }) satisfies GetStaticPaths;
 
-const { vault, slug } = Astro.params
-const { entry } = Astro.props
-
+// const { vault, slug } = Astro.params
+const { entry } = Astro.props;
+const { Content } = await render(entry);
 ---
 
 <Layout>
   <article class="container mx-auto p-4 prose prose-slate">
     <h1>{entry.data.title}</h1>
 
+    <Content />
   </article>
 </Layout>

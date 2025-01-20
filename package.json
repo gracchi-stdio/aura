@@ -17,13 +17,15 @@
     "remark-parse": "^11.0.0",
     "remark-rehype": "^11.1.1",
     "remark-stringify": "^11.0.0",
-    "remark-wikirefs": "^0.0.7-rm",
     "tailwindcss": "^3.4.17",
     "unified": "^11.0.5"
   },
   "devDependencies": {
     "@rollup/plugin-yaml": "^4.1.2",
     "@tailwindcss/typography": "^0.5.16",
-    "@types/node": "^22.10.7"
+    "@types/node": "^22.10.7",
+    "prettier": "^3.4.2",
+    "prettier-plugin-astro": "^0.14.1",
+    "remark-wiki-link": "^2.0.1"
   }
 }
