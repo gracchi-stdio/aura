@@ -1,11 +1,9 @@
 import { Octokit } from "@octokit/rest";
-import type { components } from "@octokit/openapi-types";
-import type { VaultFile, VaultConfig } from "./types";
+import type { VaultFile, VaultConfig } from "@/types";
+
 const octokit = new Octokit({
   auth: import.meta.env.GITHUB_TOKEN,
 });
-
-export type RepoContent = components["schemas"]["content-directory"][number];
 
 export async function getVaultStructure(
   config: VaultConfig,
@@ -67,35 +65,11 @@ export async function getFileContent(
     if ("content" in data) {
       return Buffer.from(data.content, "base64").toString();
     }
-    throw new Error("Not a file");
+
+    return null;
   } catch (error) {
     console.error(`Error fatching file ${filePath}`, error);
 
-    return null;
-  }
-}
-
-export async function getFileSha(
-  config: VaultConfig,
-  filePath: string,
-): Promise<string | null> {
-  const { owner, repo, branch = "main" } = config;
-
-  try {
-    const response = await octokit.repos.getContent({
-      owner,
-      repo,
-      ref: branch,
-      path: filePath,
-    });
-
-    if ("sha" in response.data) {
-      return response.data.sha;
-    }
-
-    return null;
-  } catch (error) {
-    console.error(`Error fetching SHA for ${filePath}:`, error);
     return null;
   }
 }

@@ -1,55 +1,38 @@
 import config from "@/config.yml";
-import { string } from "astro:schema";
-import type { VaultConfig } from "./types";
+import type { VaultConfig, Config } from "@/types";
 
-export function getConfig() {
+const DEFAULT_CONFIG: Config = {
+  app: { name: "Aura Note" },
+  vaults: [],
+};
+
+export function getConfig(): Config {
+  if (!config) return DEFAULT_CONFIG;
   return {
     app: {
-      name: validateString(config?.app?.name, "Aura Note"),
+      name: config.app?.name?.trim() || DEFAULT_CONFIG.app.name,
     },
-    vaults: validateVaults(config?.vaults),
+    vaults: Array.isArray(config.vaults)
+      ? config.vaults.filter(isValidVaultConfig).map(normalizeVaultConfig)
+      : DEFAULT_CONFIG.vaults,
   };
 }
 
-function validateString(value: unknown, defaultValue: string): string {
-  if (typeof value === "string" && value.trim()) {
-    return value.trim();
-  }
-
-  return defaultValue;
-}
-
-function validateVaultConfig(vault: unknown): VaultConfig | null {
-  if (!vault || typeof vault !== "object") return null;
-
-  const v = vault as any;
-
-  if (!v.owner || !v.repo) return null;
-
+function normalizeVaultConfig(vault: VaultConfig): VaultConfig {
+  const { owner, repo, branch = "main", path = "" } = vault;
   return {
-    owner: validateString(v.owner, ""),
-    repo: validateString(v.repo, ""),
-    branch: validateString(v.branch, ""),
-    path: validateString(v.path, ""),
+    owner,
+    repo,
+    branch,
+    path,
   };
 }
 
-function validateVaults(vaults: unknown): VaultConfig[] {
-  if (!Array.isArray(vaults)) {
-    return [getDefaultVaultConfig()];
-  }
-
-  const validVaults = vaults
-    .map((vault) => validateVaultConfig(vault))
-    .filter((vault): vault is VaultConfig => vault !== null);
-
-  return validVaults.length > 0 ? validVaults : [getDefaultVaultConfig()];
-}
-
-export function getDefaultVaultConfig(): VaultConfig {
-  return {
-    owner: "Kavehrafie",
-    repo: "unboundedTerritories",
-    branch: "main",
-  };
+function isValidVaultConfig(vault: any): vault is VaultConfig {
+  return (
+    vault &&
+    typeof vault === "object" &&
+    typeof vault.owner === "string" &&
+    typeof vault.repo === "string"
+  );
 }

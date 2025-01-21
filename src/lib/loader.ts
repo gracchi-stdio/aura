@@ -1,20 +1,20 @@
 import type { Loader, LoaderContext } from "astro/loaders";
-import type { VaultConfig } from "./types";
+import { NoteSchema, TagStatsSchema, type VaultConfig } from "@/types";
 import { getFileContent, getVaultStructure } from "./github";
 import matter from "gray-matter";
-import { z } from "astro:content";
 import { unified } from "unified";
 import remarkParse from "node_modules/remark-parse/lib";
 import remarkRehype from "remark-rehype";
 import rehypeStringify from "rehype-stringify";
 import wikiLinkPlugin from "remark-wiki-link";
+import { tagManager } from "./tags";
+import { slugify } from "@/utils";
+import { getConfig } from "./config";
+import { eventManager } from "./events";
+import { getCollection } from "astro:content";
 
-export interface GithubLoaderOptions {
-  vault: VaultConfig;
-}
-
-export function githubLoader(options: GithubLoaderOptions): Loader {
-  const { vault } = options;
+const { vaults } = getConfig();
+export function githubLoader(): Loader {
   return {
     name: "github-loader",
     load: async ({
@@ -23,87 +23,101 @@ export function githubLoader(options: GithubLoaderOptions): Loader {
       generateDigest,
       logger,
     }: LoaderContext): Promise<void> => {
-      logger.info(`Loading content from ${vault.repo}`);
-
       store.clear();
 
-      const files = await getVaultStructure(vault);
-      const markdownFiles = files.filter(
-        (file) => file.type === "file" && file.path.endsWith(".md"),
-      );
+      for (const vault of vaults) {
+        logger.info(`Loading content from ${vault.repo}`);
+        const files = await getVaultStructure(vault);
+        const markdownFiles = files.filter(
+          (file) => file.type === "file" && file.path.endsWith(".md"),
+        );
 
-      const fileMap = new Map(
-        files
-          .filter((f) => f.type === "file" && f.path.endsWith(".md"))
-          .map((f) => [
-            f.name.replace(".md", "").toLowerCase(),
-            f.path.replace(".md", ""),
+        const fileMap = new Map(
+          markdownFiles.map((f) => [
+            f.name.replace(/\.md$/, "").toLowerCase(),
+            f.path.replace(/\.md$/, ""),
           ]),
-      );
+        );
 
-      const permalinks = markdownFiles.map((f) => f.path);
+        const permalinks = markdownFiles.map((f) => f.path);
 
-      for (const file of markdownFiles) {
-        const content = await getFileContent(vault, file.path);
-        if (!content) continue;
+        for (const file of markdownFiles) {
+          const content = await getFileContent(vault, file.path);
+          if (!content) continue;
 
-        const { data: frontmatter, content: body } = matter(content);
+          const { data: frontmatter, content: body } = matter(content);
 
-        const isIndex = file.name.split("/").pop() === "index.md";
-        const slug = file.path.replace(/\.md$/, "").replace(/\s+/g, "-");
-
-        const parsedData = await parseData({
-          id: file.name.split("/").pop() || file.name,
-          data: {
-            ...frontmatter,
-            tags: frontmatter.tags || [],
-            isIndex,
-            createdAt: frontmatter.createdAt || null,
-            updatedAt: frontmatter.updatedAt || null,
-            slug,
-            title: frontmatter.title || file.name.replace(/\.md$/, ""),
-          },
-        });
-
-        const digest = generateDigest(content);
-
-        const processContent = await unified()
-          .use(remarkParse, { gfm: true })
-          .use(wikiLinkPlugin, {
-            permalinks,
-            aliasDivider: "|",
-            hrefTemplate: (permalink: string) =>
-              `/${vault.repo}/${fileMap.get(permalink)}`,
-          })
-          .use(remarkRehype)
-          .use(rehypeStringify)
-          .process(body);
-
-        const html = processContent.toString();
-
-        store.set({
-          id: file.path,
-          data: parsedData,
-          body,
-          digest,
-          rendered: {
-            html,
-            metadata: {
-              frontmatter: parsedData,
+          const slug = file.path.replace(/\.md$/, "").replace(/\s+/g, "-");
+          const id = `${vault.repo}>${file.name.split("/").pop() || file.name}`;
+          const parsedData = await parseData({
+            id,
+            data: {
+              ...frontmatter,
+              tags: frontmatter.tags || [],
+              repo: vault.repo,
+              draft: frontmatter.draft,
+              createdAt: frontmatter.createdAt || null,
+              updatedAt: frontmatter.updatedAt || null,
+              slug,
+              title: frontmatter.title || file.name.replace(/\.md$/, ""),
             },
-          },
-        });
+          });
+
+          const digest = generateDigest(content);
+
+          const processContent = await unified()
+            .use(remarkParse, { gfm: true })
+            .use(wikiLinkPlugin, {
+              permalinks,
+              aliasDivider: "|",
+              hrefTemplate: (permalink: string) =>
+                `/${slugify(vault.repo)}/${fileMap.get(permalink)}`,
+            })
+            .use(remarkRehype)
+            .use(rehypeStringify)
+            .process(body);
+
+          const html = processContent.toString();
+
+          tagManager.addNote(vault.repo, parsedData);
+
+          store.set({
+            id: file.path,
+            data: parsedData,
+            body,
+            digest,
+            rendered: {
+              html,
+              metadata: {
+                frontmatter: parsedData,
+              },
+            },
+          });
+        }
+        logger.info(`Completed loading repo: ${vault.repo}`);
       }
+
+      eventManager.emit("notes-loaded");
     },
-    schema: async () =>
-      z.object({
-        title: z.string(),
-        isIndex: z.boolean(),
-        slug: z.string(),
-        createdAt: z.date().nullable().optional(),
-        updatedAt: z.date().nullable().optional(),
-        tags: z.array(z.string()).optional(),
-        draft: z.boolean().default(true),
-      }),
+    schema: async () => NoteSchema,
+  };
+}
+
+export function tagStatsLoader() {
+  return {
+    name: "tag-stats-loader",
+    load: async ({ store, logger }: LoaderContext) => {
+      logger.info(`Waiting for notes to be processed...`);
+      store.clear();
+
+      await eventManager.waitFor("notes-loaded");
+
+      logger.info(`Notes loaded, compiling tag stats`);
+      store.set({
+        id: `stats`,
+        data: tagManager.getTagStats(),
+      });
+    },
+    schema: TagStatsSchema,
   };
 }

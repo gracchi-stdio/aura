@@ -1,6 +1,6 @@
 app:
   name: Aura
-repos:
+vaults:
   - owner: "Kavehrafie"
     repo: "unboundedTerritories"
     branch: "main"

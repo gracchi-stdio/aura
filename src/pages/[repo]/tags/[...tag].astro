@@ -1,0 +1,27 @@
+---
+import type { GetStaticPaths } from "astro";
+import { getCollection } from "astro:content";
+import Layout from "@/layouts/Layout.astro";
+import { slugify } from "@/utils";
+export const getStaticPaths = (async () => {
+  const tagStats = await getCollection("tagStats");
+  const stats = tagStats[0].data;
+
+  const paths = [];
+
+  for (const [repo, vaultTags] of Object.entries(stats.vaultTags)) {
+    for (const tag of vaultTags) {
+      paths.push({
+        params: { repo: slugify(repo), tag },
+        props: { tagInfo: stats.tags[tag] },
+      });
+    }
+  }
+  return paths;
+}) satisfies GetStaticPaths;
+
+const { vault, tag } = Astro.params;
+const { tagInfo } = Astro.props;
+---
+
+<Layout />

@@ -4,36 +4,28 @@ import { getConfig } from "@/lib/config";
 import { getCollection } from "astro:content";
 import Layout from "@/layouts/Layout.astro";
 import { render } from "astro:content";
+import { slugify } from "@/utils";
 
 export const getStaticPaths = (async () => {
   const { vaults } = getConfig();
   const paths = [];
 
-  for (const vault of vaults) {
+  const entries = await getCollection("obsidianNotes");
+  for (const { repo } of vaults) {
     try {
-      // @ts-ignore
-      const entries = await getCollection(vault.repo);
-
-      const indexEntry = entries.find((entry) => entry.id === "index.md");
-      if (indexEntry) {
+      for (const entry of entries.filter((note) => note.data.repo === repo)) {
         paths.push({
-          params: { vault: vault.repo, slug: undefined },
-          props: { entry: indexEntry },
+          params: {
+            vault: slugify(repo),
+            slug: entry.id === "index.md" ? undefined : entry.data.slug,
+          },
+          props: {
+            entry,
+          },
         });
       }
-      paths.push(
-        ...entries
-          .filter((entry) => entry.id !== "index.md")
-          .map((entry) => ({
-            params: {
-              vault: vault.repo,
-              slug: entry?.data.slug,
-            },
-            props: { entry },
-          })),
-      );
     } catch (error) {
-      console.error(`The vault collection: ${vault.repo} not available`);
+      console.error(`The vault collection: ${repo} not available`);
     }
   }
 
