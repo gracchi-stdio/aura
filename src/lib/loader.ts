@@ -8,7 +8,7 @@ import remarkRehype from "remark-rehype";
 import rehypeStringify from "rehype-stringify";
 import wikiLinkPlugin from "remark-wiki-link";
 import { tagManager } from "./tags";
-import { parseContentTags, slugify } from "@/utils";
+import { parseContentTags, remarkGrid, slugify } from "@/utils";
 import { getConfig } from "./config";
 import { eventManager } from "./events";
 import { v4 as uuidv4 } from "uuid";
@@ -40,7 +40,7 @@ export function githubLoader(): Loader {
           ]),
         );
 
-        const permalinks = markdownFiles.map((f) => f.path);
+        const permalinks = markdownFiles.map((f) => slugify(f.path));
 
         for (const file of markdownFiles) {
           const content = await getFileContent(vault, file.path);
@@ -98,7 +98,9 @@ export function githubLoader(): Loader {
               hrefTemplate: (permalink: string) =>
                 `/${slugify(vault.repo)}/${fileMap.get(permalink)}`,
             })
+            .use(remarkGrid)
             .use(remarkRehype, {
+              allowDangerousHtml: true,
               handlers: {
                 image(_, node) {
                   const url = node.url;
