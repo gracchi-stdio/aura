@@ -40,7 +40,9 @@ export function githubLoader(): Loader {
           ]),
         );
 
-        const permalinks = markdownFiles.map((f) => slugify(f.path));
+        const permalinks = markdownFiles.map((f) =>
+          slugify(f.path.toLowerCase()),
+        );
 
         for (const file of markdownFiles) {
           const content = await getFileContent(vault, file.path);
