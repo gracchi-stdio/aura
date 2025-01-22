@@ -16,14 +16,26 @@ const relTree = getRelativeTree(
 );
 ---
 
-<p>{JSON.stringify(tree)}</p>
-<p>{JSON.stringify(relTree)}</p>
-<ul>
-  {
-    config.vaults.map((vault) => (
-      <li>
-        <a href={`/${slugify(vault.repo)}`}>{vault.repo}</a>
-      </li>
-    ))
-  }
-</ul>
+<!doctype html>
+<html lang="en" data-theme="light">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width initial-scale=1.0" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <meta name="generator" content={Astro.generator} />
+    <title>{config.app.name || "Aura"}</title>
+  </head>
+  <body class="min-h-screen bg-base-200 flex justify-center items-center">
+    <ul>
+      {
+        config.vaults.map((vault) => (
+          <li>
+            <a class="btn btn-lg btn-outline" href={`/${slugify(vault.repo)}`}>
+              {vault.label}
+            </a>
+          </li>
+        ))
+      }
+    </ul>
+  </body>
+</html>

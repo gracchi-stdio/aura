@@ -7,6 +7,7 @@ const NavValueSchema: z.ZodType<any> = z.lazy(() =>
 export const NoteSchema = z.object({
   title: z.string(),
   slug: z.string(),
+  path: z.string(),
   uuid: z.string(),
   nav: z.boolean().optional(),
   shortTitle: z.string().nullable().optional(),

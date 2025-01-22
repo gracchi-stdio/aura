@@ -1,11 +1,22 @@
 ---
 import Navbar from "@/components/Navbar.astro";
 import type { VaultConfig } from "@/types";
-
+import { buildNavTree, getRelativeTree, slugify } from "@/utils";
+import { getCollection } from "astro:content";
+import Footer from "@/components/Footer.astro";
 interface Props {
   vault: VaultConfig;
 }
 const { vault } = Astro.props;
+const currentPath = Astro.url.pathname.slice(1);
+console.log(currentPath);
+const firstSegment = currentPath.split("/")[0];
+const collection = await getCollection(
+  "obsidianNotes",
+  (entry) => slugify(entry.data.repo) === firstSegment,
+);
+const absoluteTree = buildNavTree(collection);
+const navTree = getRelativeTree(absoluteTree, currentPath);
 ---
 
 <!doctype html>
@@ -17,14 +28,14 @@ const { vault } = Astro.props;
     <meta name="generator" content={Astro.generator} />
     <title>{vault.label}</title>
   </head>
-  <body class="min-h-screen bg-base-100">
+  <body class="min-h-screen bg-base-200">
     <div class="drawer lg:drawer-open">
       <input id="drawer-toggle" type="checkbox" class="drawer-toggle" />
 
       <!-- Page content -->
       <div class="drawer-content flex flex-col">
         <!-- Navbar for mobile -->
-        <div class="navbar lg:hidden bg-base-200">
+        <div class="navbar lg:hidden bg-base-200 border-r-indigo-400 border-b">
           <div class="flex-none">
             <label
               for="drawer-toggle"
@@ -50,19 +61,23 @@ const { vault } = Astro.props;
         </div>
 
         <!-- Main content -->
-        <main class="flex-1 p-4">
-          <Navbar {vault} />
+        <main class="flex-1 p-4 lg:py-6">
           <slot />
         </main>
+
+        <Footer {vault} />
       </div>
       <!-- Sidebar content -->
       <div class="drawer-side">
         <label for="drawer-toggle" class="drawer-overlay"></label>
-        <aside class="bg-base-200 w-80 min-h-screen">
-          <div class="sticky top-0 z-20 hidden lg:block bg-base-200 px-8 py-4">
+        <aside
+          class="bg-base-200 w-96 min-h-screen border-r-indigo-400 border-r"
+        >
+          <div class="sticky top-0 z-20 hidden lg:block px-8 py-10">
             <h1 class="text-3xl">{vault?.label}</h1>
           </div>
-          <div class="px-6">
+          <div class="px-4">
+            <Navbar {navTree} />
             <slot name="sidebar" />
           </div>
         </aside>

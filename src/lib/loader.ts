@@ -47,7 +47,11 @@ export function githubLoader(): Loader {
 
           const { data: frontmatter, content: body } = matter(content);
 
-          const slug = file.path.replace(/\.md$/, "").replace(/\s+/g, "-");
+          const slug = file.path
+            .toLocaleLowerCase()
+            .replace(/\.md$/, "")
+            .replace(/\s+/g, "-");
+
           const uuid = uuidv4();
 
           const allTags = [
@@ -61,6 +65,7 @@ export function githubLoader(): Loader {
             id: uuid,
             data: {
               ...frontmatter,
+              path: file.path,
               uuid,
               tags: allTags,
               repo: vault.repo,

@@ -1,6 +1,7 @@
 import type { NavItem, NavTree } from "@/types/nav";
 import type { CollectionEntry } from "astro:content";
 import { merge } from "ts-deepmerge";
+import { slugify } from ".";
 
 export function buildNavTree(
   collection: CollectionEntry<"obsidianNotes">[],
@@ -10,23 +11,30 @@ export function buildNavTree(
   tree = collection.reduce((acc, entry) => {
     const { data } = entry;
 
-    const segments = data.slug.split("/");
+    console.log(entry.data.path);
+
+    const segments = data.path.split("/");
     // the folders starting with '_' are hidden
     if (segments.some((part) => part.startsWith("_"))) return acc;
     if (!entry.data?.nav) return acc;
 
-    segments.pop();
+    const last = segments.pop() || "";
 
-    let nested: NavItem = {
-      slug: data.slug,
-      label: data?.shortTitle || data.title,
+    let nested: NavTree = {
+      [last]: {
+        label: entry.data.title,
+        slug: `/${slugify(entry.data.repo)}/${entry.data.slug}`,
+      },
     };
-
     while (segments.length > 0) {
-      nested = { label: segments.pop() || "", children: [nested] };
+      const segment = segments.pop() || "";
+
+      nested = { [segment]: { label: segment, children: nested } };
     }
 
-    return merge(acc, { [entry.data.repo]: { [nested.label]: nested } });
+    return merge(acc, {
+      [slugify(entry.data.repo)]: { label: entry.data.repo, children: nested },
+    });
   }, tree);
 
   return tree;
@@ -42,8 +50,9 @@ export function getRelativeTree(
   currSegs.pop();
 
   currSegs.forEach((seg, idx) => {
-    if (Array.isArray(mainTree[seg])) return;
-    relNav = relNav[seg];
+    if (!relNav[seg]?.children) return;
+    if (idx + 1 === currSegs.length) return;
+    relNav = relNav[seg].children;
   });
 
   return relNav;

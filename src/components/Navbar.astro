@@ -1,15 +1,52 @@
 ---
-import { getVaultStructure } from "@/lib/github";
-import type { VaultConfig } from "@/types";
 import type { NavTree } from "@/types/nav";
 
 interface Props {
   navTree: NavTree;
-  currentPath: string;
 }
-const { navTree, currentPath } = Astro.props;
+
+const { navTree } = Astro.props;
+const currentPath = Astro.url.pathname.split("/");
+const pathLength = currentPath.length;
+const [innerTree] = Object.values(navTree);
+
+const backlink = `        
+        <li>
+
+<a href="/${currentPath[1]}">
+<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 19V5m10 1l-6 6l6 6m-6-6h14"/></svg>
+</a>
+        </li>`;
+function traverse(tree: NavTree): string {
+  return Object.entries(tree)
+    .map(([key, node]) => {
+      if (!node.children || Object.keys(node.children).length === 0) {
+        return `
+        <li>
+<a href="${node.slug}">${node.label}</a>
+        </li>
+      `;
+      }
+
+      return `
+      <li>
+        <details open>
+          <summary>${node.label}</summary>
+          <ul class="menu menu-sm">
+            ${traverse(node.children)}
+          </ul>
+        </details>
+      </li>
+    `;
+    })
+    .join("");
+}
+
+const htmlContent =
+  (pathLength > 2 ? backlink : "") + traverse(innerTree?.children || {});
 ---
 
-<p class="">
-  {JSON.stringify(list)}
-</p>
+<ul
+  class="menu menu-lg bg-base-200 rounded-box w-full"
+  set:html={htmlContent}
+/>

@@ -4,4 +4,11 @@ export type NavItem = {
   children?: NavItem[];
 };
 
-export type NavTree = Record<string, NavItem[] | Record<string, NavItem[]>>;
+export type NavTree = Record<
+  string,
+  {
+    label: string;
+    slug?: string;
+    children?: NavTree;
+  }
+>;
