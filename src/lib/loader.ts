@@ -98,7 +98,7 @@ export function githubLoader(): Loader {
               permalinks,
               aliasDivider: "|",
               hrefTemplate: (permalink: string) =>
-                `/${slugify(vault.repo)}/${fileMap.get(permalink)}`,
+                `/${slugify(vault.repo)}/${fileMap.get(permalink)?.toLowerCase()}`,
             })
             .use(remarkGrid)
             .use(remarkRehype, {
