@@ -12,6 +12,7 @@ import { parseContentTags, slugify } from "@/utils";
 import { getConfig } from "./config";
 import { eventManager } from "./events";
 import { v4 as uuidv4 } from "uuid";
+import remarkGfm from "remark-gfm";
 
 const { vaults } = getConfig();
 export function githubLoader(): Loader {
@@ -89,7 +90,14 @@ export function githubLoader(): Loader {
           // In unified chain
 
           const processContent = await unified()
-            .use(remarkParse, { gfm: true })
+            .use(remarkParse)
+            .use(remarkGfm)
+            .use(wikiLinkPlugin, {
+              permalinks,
+              aliasDivider: "|",
+              hrefTemplate: (permalink: string) =>
+                `/${slugify(vault.repo)}/${fileMap.get(permalink)}`,
+            })
             .use(remarkRehype, {
               handlers: {
                 image(_, node) {
@@ -115,13 +123,6 @@ export function githubLoader(): Loader {
                 },
               },
             })
-            .use(wikiLinkPlugin, {
-              permalinks,
-              aliasDivider: "|",
-              hrefTemplate: (permalink: string) =>
-                `/${slugify(vault.repo)}/${fileMap.get(permalink)}`,
-            })
-            .use(remarkRehype)
             .use(rehypeStringify)
             .process(body);
 
