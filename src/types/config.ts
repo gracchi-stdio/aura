@@ -3,6 +3,7 @@ export type VaultConfig = {
   repo: string;
   branch: string;
   path: string;
+  label: string;
 };
 
 export type Config = {

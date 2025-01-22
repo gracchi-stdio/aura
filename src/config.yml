@@ -4,3 +4,4 @@ vaults:
   - owner: "Kavehrafie"
     repo: "unboundedTerritories"
     branch: "main"
+    label: "Unbounded Territories"

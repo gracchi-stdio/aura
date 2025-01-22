@@ -19,12 +19,13 @@ export function getConfig(): Config {
 }
 
 function normalizeVaultConfig(vault: VaultConfig): VaultConfig {
-  const { owner, repo, branch = "main", path = "" } = vault;
+  const { owner, repo, branch = "main", path = "", label } = vault;
   return {
     owner,
     repo,
     branch,
     path,
+    label,
   };
 }
 
@@ -33,6 +34,7 @@ function isValidVaultConfig(vault: any): vault is VaultConfig {
     vault &&
     typeof vault === "object" &&
     typeof vault.owner === "string" &&
-    typeof vault.repo === "string"
+    typeof vault.repo === "string" &&
+    typeof vault.label === "string"
   );
 }

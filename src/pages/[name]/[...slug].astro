@@ -11,33 +11,35 @@ export const getStaticPaths = (async () => {
   const paths = [];
 
   const entries = await getCollection("obsidianNotes");
-  for (const { repo } of vaults) {
+  for (const vault of vaults) {
     try {
-      for (const entry of entries.filter((note) => note.data.repo === repo)) {
+      for (const entry of entries.filter(
+        (note) => note.data.repo === vault.repo,
+      )) {
         paths.push({
           params: {
-            vault: slugify(repo),
+            name: slugify(vault.repo),
             slug: entry.id === "index.md" ? undefined : entry.data.slug,
           },
           props: {
             entry,
+            vault,
           },
         });
       }
     } catch (error) {
-      console.error(`The vault collection: ${repo} not available`);
+      console.error(`The vault collection: ${vault.repo} not available`);
     }
   }
 
   return paths;
 }) satisfies GetStaticPaths;
 
-// const { vault, slug } = Astro.params
-const { entry } = Astro.props;
+const { entry, vault } = Astro.props;
 const { Content } = await render(entry);
 ---
 
-<Layout>
+<Layout {vault}>
   <article class="container mx-auto p-4 prose prose-slate">
     <h1>{entry.data.title}</h1>
 

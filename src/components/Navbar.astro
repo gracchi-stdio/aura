@@ -1,0 +1,15 @@
+---
+import { getVaultStructure } from "@/lib/github";
+import type { VaultConfig } from "@/types";
+import type { NavTree } from "@/types/nav";
+
+interface Props {
+  navTree: NavTree;
+  currentPath: string;
+}
+const { navTree, currentPath } = Astro.props;
+---
+
+<p class="">
+  {JSON.stringify(list)}
+</p>

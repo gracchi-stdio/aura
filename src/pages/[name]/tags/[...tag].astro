@@ -3,6 +3,7 @@ import type { GetStaticPaths } from "astro";
 import { getCollection } from "astro:content";
 import Layout from "@/layouts/Layout.astro";
 import { slugify } from "@/utils";
+
 export const getStaticPaths = (async () => {
   const tagStats = await getCollection("tagStats");
   const stats = tagStats[0].data;
@@ -20,8 +21,22 @@ export const getStaticPaths = (async () => {
   return paths;
 }) satisfies GetStaticPaths;
 
-const { vault, tag } = Astro.params;
+const { repo, tag } = Astro.params;
 const { tagInfo } = Astro.props;
+const notes = await getCollection(
+  "obsidianNotes",
+  (note) => note.data.repo === repo && note.data.tags?.includes(tag),
+);
 ---
 
-<Layout />
+<Layout>
+  <pre
+    class="w-96">
+    {JSON.stringify(tagInfo.notes)}
+    <hr />
+    {JSON.stringify(notes)}
+  </pre>
+  <ul>
+    {notes.map((note) => <a href={`/${repo}/`}>{note.data.title}</a>)}
+  </ul>
+</Layout>

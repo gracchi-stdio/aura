@@ -1,5 +1,5 @@
 import type { Loader, LoaderContext } from "astro/loaders";
-import { NoteSchema, TagStatsSchema, type VaultConfig } from "@/types";
+import { NoteSchema, TagStatsSchema } from "@/types";
 import { getFileContent, getVaultStructure } from "./github";
 import matter from "gray-matter";
 import { unified } from "unified";
@@ -8,10 +8,10 @@ import remarkRehype from "remark-rehype";
 import rehypeStringify from "rehype-stringify";
 import wikiLinkPlugin from "remark-wiki-link";
 import { tagManager } from "./tags";
-import { slugify } from "@/utils";
+import { parseContentTags, slugify } from "@/utils";
 import { getConfig } from "./config";
 import { eventManager } from "./events";
-import { getCollection } from "astro:content";
+import { v4 as uuidv4 } from "uuid";
 
 const { vaults } = getConfig();
 export function githubLoader(): Loader {
@@ -48,17 +48,27 @@ export function githubLoader(): Loader {
           const { data: frontmatter, content: body } = matter(content);
 
           const slug = file.path.replace(/\.md$/, "").replace(/\s+/g, "-");
-          const id = `${vault.repo}>${file.name.split("/").pop() || file.name}`;
+          const uuid = uuidv4();
+
+          const allTags = [
+            ...new Set([
+              ...(frontmatter.tags || []),
+              ...parseContentTags(content),
+            ]),
+          ];
+
           const parsedData = await parseData({
-            id,
+            id: uuid,
             data: {
               ...frontmatter,
-              tags: frontmatter.tags || [],
+              uuid,
+              tags: allTags,
               repo: vault.repo,
-              draft: frontmatter.draft,
               createdAt: frontmatter.createdAt || null,
               updatedAt: frontmatter.updatedAt || null,
+              draft: frontmatter.draft,
               slug,
+              shortTitle: frontmatter.shortTitle || frontmatter.title,
               title: frontmatter.title || file.name.replace(/\.md$/, ""),
             },
           });

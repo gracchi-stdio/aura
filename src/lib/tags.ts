@@ -1,9 +1,9 @@
 import type { z } from "astro/zod";
-import { NoteSchema } from "./loader";
+import { NoteSchema } from "@/types";
 
 type TagInfo = {
   count: number;
-  notes: string[];
+  notes: z.infer<typeof NoteSchema>[];
 };
 
 type TagStats = {
@@ -22,13 +22,13 @@ class TagManager {
       this.vaultTags.set(repo, new Set());
     }
 
-    tags.forEach((tag) => {
+    tags.forEach((tag: string) => {
       this.vaultTags.get(repo)?.add(tag);
 
       // Update global tag info
       const tagInfo = this.tagMap.get(tag) || { count: 0, notes: [] };
       tagInfo.count++;
-      tagInfo.notes.push(note.slug);
+      tagInfo.notes.push(note);
       this.tagMap.set(tag, tagInfo);
     });
   }

@@ -1,31 +1,29 @@
 ---
 import { getCollection } from "astro:content";
 import { getConfig } from "../lib/config";
-import Layout from "../layouts/Layout.astro";
-import { slugify } from "@/utils";
+import { buildNavTree, slugify, getRelativeTree } from "@/utils";
 const config = getConfig();
-const collections: Record<string, any[]> = {};
 
 // Load all collections
-for (const vault of config.vaults) {
-  try {
-    //@ts-ignore
-    collections[vault.repo] = await getCollection(vault.repo);
-  } catch (error) {
-    console.error(`Error loading collection ${vault.repo}:`, error);
-    collections[vault.repo] = [];
-  }
-}
+const collections = await getCollection("obsidianNotes");
+const repoCol = collections.filter(
+  (collection) => collection.data.repo === config.vaults[0].repo,
+);
+const tree = buildNavTree(repoCol);
+const relTree = getRelativeTree(
+  tree,
+  "unboundedTerritories/artists/linda_abdullah",
+);
 ---
 
-<Layout>
-  <ul>
-    {
-      config.vaults.map((vault) => (
-        <li>
-          <a href={`/${slugify(vault.repo)}`}>{vault.repo}</a>
-        </li>
-      ))
-    }
-  </ul>
-</Layout>
+<p>{JSON.stringify(tree)}</p>
+<p>{JSON.stringify(relTree)}</p>
+<ul>
+  {
+    config.vaults.map((vault) => (
+      <li>
+        <a href={`/${slugify(vault.repo)}`}>{vault.repo}</a>
+      </li>
+    ))
+  }
+</ul>

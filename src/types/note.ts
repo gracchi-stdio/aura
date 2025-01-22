@@ -1,8 +1,15 @@
 import { z } from "astro:content";
 
+const NavValueSchema: z.ZodType<any> = z.lazy(() =>
+  z.union([z.string(), z.record(NavValueSchema)]),
+);
+
 export const NoteSchema = z.object({
   title: z.string(),
   slug: z.string(),
+  uuid: z.string(),
+  nav: z.boolean().optional(),
+  shortTitle: z.string().nullable().optional(),
   repo: z.string(),
   createdAt: z.date().nullable().optional(),
   updatedAt: z.date().nullable().optional(),
@@ -19,3 +26,6 @@ export const TagStatsSchema = z.object({
     }),
   ),
 });
+
+export type Note = z.infer<typeof NoteSchema>;
+export type NavValue = z.infer<typeof NavValueSchema>;
