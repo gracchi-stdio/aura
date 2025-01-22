@@ -84,8 +84,37 @@ export function githubLoader(): Loader {
 
           const digest = generateDigest(content);
 
+          const isVideo = (url: string) => /\.(mp4|webm|ogg)$/.test(url);
+
+          // In unified chain
+
           const processContent = await unified()
             .use(remarkParse, { gfm: true })
+            .use(remarkRehype, {
+              handlers: {
+                image(_, node) {
+                  const url = node.url;
+                  if (/\.(mp4|webm|ogg)$/.test(url)) {
+                    return {
+                      type: "element",
+                      tagName: "video",
+                      properties: {
+                        controls: true,
+                        className: ["w-full", "max-h-96"],
+                        src: url,
+                      },
+                      children: [],
+                    };
+                  }
+                  return {
+                    type: "element",
+                    tagName: "img",
+                    properties: { src: url, alt: node.alt },
+                    children: [],
+                  };
+                },
+              },
+            })
             .use(wikiLinkPlugin, {
               permalinks,
               aliasDivider: "|",

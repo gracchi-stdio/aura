@@ -11,8 +11,6 @@ export function buildNavTree(
   tree = collection.reduce((acc, entry) => {
     const { data } = entry;
 
-    console.log(entry.data.path);
-
     const segments = data.path.split("/");
     // the folders starting with '_' are hidden
     if (segments.some((part) => part.startsWith("_"))) return acc;

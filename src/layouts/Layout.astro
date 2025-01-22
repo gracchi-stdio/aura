@@ -9,7 +9,6 @@ interface Props {
 }
 const { vault } = Astro.props;
 const currentPath = Astro.url.pathname.slice(1);
-console.log(currentPath);
 const firstSegment = currentPath.split("/")[0];
 const collection = await getCollection(
   "obsidianNotes",
