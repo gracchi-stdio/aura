@@ -47,10 +47,14 @@ export function githubLoader(): Loader {
 
           const { data: frontmatter, content: body } = matter(content);
 
-          const slug = file.path
+          // don't publish if it is draft
+          if (frontmatter.draft) continue;
+
+          let slug = file.path
             .toLocaleLowerCase()
             .replace(/\.md$/, "")
             .replace(/\s+/g, "-");
+          slug = slug === "index" ? "/" : slug.replace(/\/index$/, "");
 
           const uuid = uuidv4();
 

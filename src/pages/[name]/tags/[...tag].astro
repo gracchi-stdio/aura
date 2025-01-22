@@ -3,6 +3,7 @@ import type { GetStaticPaths } from "astro";
 import { getCollection } from "astro:content";
 import Layout from "@/layouts/Layout.astro";
 import { slugify } from "@/utils";
+import { getConfig } from "@/lib/config";
 
 export const getStaticPaths = (async () => {
   const tagStats = await getCollection("tagStats");
@@ -13,30 +14,64 @@ export const getStaticPaths = (async () => {
   for (const [repo, vaultTags] of Object.entries(stats.vaultTags)) {
     for (const tag of vaultTags) {
       paths.push({
-        params: { repo: slugify(repo), tag },
-        props: { tagInfo: stats.tags[tag] },
+        params: { name: slugify(repo), tag },
+        props: { tagInfo: stats.tags[tag], repo: repo },
       });
     }
   }
   return paths;
 }) satisfies GetStaticPaths;
 
-const { repo, tag } = Astro.params;
-const { tagInfo } = Astro.props;
+const { vaults } = getConfig();
+const { name, tag } = Astro.params;
+const { tagInfo, repo } = Astro.props;
+const vault = vaults.filter((vault) => vault.repo === repo)[0];
 const notes = await getCollection(
   "obsidianNotes",
-  (note) => note.data.repo === repo && note.data.tags?.includes(tag),
+  (note) => note.data.repo === vault.repo && note.data.tags?.includes(tag),
 );
 ---
 
-<Layout>
-  <pre
-    class="w-96">
-    {JSON.stringify(tagInfo.notes)}
-    <hr />
-    {JSON.stringify(notes)}
-  </pre>
-  <ul>
-    {notes.map((note) => <a href={`/${repo}/`}>{note.data.title}</a>)}
-  </ul>
+<Layout {vault}>
+  <div class="max-w-prose mx-auto mt-10">
+    <div class="mb-8">
+      <h1 class="text-4xl font-bold mb-4">
+        Notes tagged with #{tag}
+      </h1>
+      <p class="text-base-content/70">
+        Found {notes.length} notes
+      </p>
+    </div>
+
+    <div class="space-y-6">
+      {
+        notes.map((note) => (
+          <div class="card bg-base-200 shadow-sm hover:shadow-md transition-shadow">
+            <div class="card-body">
+              <h2 class="card-title">
+                <a href={`/${slugify(repo)}/${note.data.slug}`}>
+                  {note.data.title}
+                </a>
+              </h2>
+              {note.data.tags && (
+                <div class="flex flex-wrap gap-2">
+                  {note.data.tags.map((t) => (
+                    <a
+                      href={`/${slugify(repo)}/tag/${t}`}
+                      class:list={[
+                        "badge",
+                        t === tag ? "badge-neutral" : "badge-outline",
+                      ]}
+                    >
+                      #{t}
+                    </a>
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
+        ))
+      }
+    </div>
+  </div>
 </Layout>
