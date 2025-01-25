@@ -43,7 +43,7 @@ function traverse(tree: NavTree): string {
 }
 
 const htmlContent =
-  (pathLength > 2 ? backlink : "") + traverse(innerTree?.children || {});
+  (pathLength > 3 ? backlink : "") + traverse(innerTree?.children || {});
 ---
 
 <script define:vars={{ currentPath }}>
