@@ -13,6 +13,7 @@ import { getConfig } from "./config";
 import { eventManager } from "./events";
 import { v4 as uuidv4 } from "uuid";
 import remarkGfm from "remark-gfm";
+import { remove } from "unist-util-remove";
 
 const { vaults } = getConfig();
 export function githubLoader(): Loader {
@@ -94,6 +95,7 @@ export function githubLoader(): Loader {
           const processContent = await unified()
             .use(remarkParse)
             .use(remarkGfm)
+
             .use(wikiLinkPlugin, {
               permalinks,
               aliasDivider: "|",
@@ -127,6 +129,7 @@ export function githubLoader(): Loader {
                 },
               },
             })
+            .use(remarkGrid)
             .use(rehypeStringify)
             .process(body);
 

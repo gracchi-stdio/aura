@@ -1,6 +1,6 @@
 // src/lib/utils.ts
 export * from "./nav-tree";
-
+export * from "./remark";
 export function slugify(text: string): string {
   return text
     .replace(/([a-z])([A-Z])/g, "$1-$2") // Convert camelCase to kebab-case

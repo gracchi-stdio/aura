@@ -16,7 +16,6 @@ export async function getVaultStructure(
       repo,
       ref: `heads/${branch}`,
     });
-
     const { data: treeData } = await octokit.git.getTree({
       owner,
       repo,
