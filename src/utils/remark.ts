@@ -38,7 +38,7 @@ export function remarkGrid() {
         data: {
           hName: "div",
           hProperties: {
-            className: "grid grid-cols-2 xl:grid-cols-4 gap-4",
+            className: "grid grid-cols-2 2xl:grid-cols-4 gap-4",
           },
         },
         children: columns.map((columnImages) => ({
