@@ -4,7 +4,6 @@ import { getConfig } from "@/lib/config";
 import { getCollection } from "astro:content";
 import Layout from "@/layouts/Layout.astro";
 import { render } from "astro:content";
-import { slugify } from "@/utils";
 
 export const getStaticPaths = (async () => {
   const { vaults } = getConfig();
@@ -18,8 +17,7 @@ export const getStaticPaths = (async () => {
       )) {
         paths.push({
           params: {
-            name: slugify(vault.repo),
-            slug: entry.id === "index.md" ? undefined : entry.data.slug,
+            slug: entry.id === "/" ? undefined : entry.data.slug,
           },
           props: {
             entry,
@@ -31,7 +29,6 @@ export const getStaticPaths = (async () => {
       console.error(`The vault collection: ${vault.repo} not available`);
     }
   }
-
   return paths;
 }) satisfies GetStaticPaths;
 

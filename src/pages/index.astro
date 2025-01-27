@@ -9,11 +9,7 @@ const collections = await getCollection("obsidianNotes");
 const repoCol = collections.filter(
   (collection) => collection.data.repo === config.vaults[0].repo,
 );
-const tree = buildNavTree(repoCol);
-const relTree = getRelativeTree(
-  tree,
-  "unboundedTerritories/artists/linda_abdullah",
-);
+console.log(collections);
 ---
 
 <!doctype html>

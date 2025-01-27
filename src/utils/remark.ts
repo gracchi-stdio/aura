@@ -1,11 +1,12 @@
 // src/plugins/remark-grid.ts
 import { visit } from "unist-util-visit";
 import type { Parent } from "unist";
-import type { Root, RootContent } from "mdast";
+import type { Root, RootContent, Text } from "mdast";
 import type { Image } from "mdast";
 import { type } from "os";
 import { unified } from "unified";
 import remarkParse from "node_modules/remark-parse/lib";
+import remarkGfm from "remark-gfm";
 
 export function remarkGrid() {
   return (tree: Root) => {
@@ -69,64 +70,75 @@ export function remarkGrid() {
 }
 
 export interface RemarkEmbedOptions {
-  resolveContent: (path: string) => Promise<string | null>;
+  getContent: (fileName: string) => string | null;
+  maxDepth?: number;
 }
 
-export function remarkObsidianEmbed(options: RemarkEmbedOptions) {
-  const embedRegex = /!\[\[(.*?)(?:\|(.*?))?\]\]/g;
+async function processEmbeddedMarkdown(content: string): Promise<Root> {
+  const processor = unified().use(remarkParse).use(remarkGfm);
 
+  return processor.parse(content) as Root;
+}
+
+const processEmbed = async (
+  node: Text,
+  parent: Parent,
+  index: number,
+  options: RemarkEmbedOptions,
+  depth = 0,
+): Promise<void> => {
+  if (depth >= (options.maxDepth || 5)) return;
+
+  const parts = node.value.split(/(!?\[\[.*?\]\])/);
+  const chunks = [];
+
+  for (const part of parts) {
+    const embedMatch = part.match(/^!\[\[(.*?)(?:\|(.*?))?\]\]$/);
+
+    if (!embedMatch) {
+      chunks.push({
+        type: "text",
+        value: part,
+      });
+
+      continue;
+    }
+    const [, fileName, displayText] = embedMatch;
+    const embeddedContent = options.getContent(fileName);
+
+    if (!embeddedContent) continue;
+
+    if (displayText) {
+      chunks.push({
+        type: "html",
+        value: `<!-- ${displayText.trim()} -->\n`,
+      });
+    }
+
+    const promises: Promise<void>[] = [];
+    const embeddedTree = await processEmbeddedMarkdown(embeddedContent);
+    visit(embeddedTree, "text", (childNode, childIndex, childParent) => {
+      if (childNode.value.includes("![[")) {
+        promises.push(
+          processEmbed(childNode, childParent, childIndex, options, depth + 1),
+        );
+      }
+    });
+    await Promise.all(promises);
+
+    chunks.push(...embeddedTree.children);
+  }
+  parent.children.splice(index, 1, ...chunks);
+};
+
+export function remarkObsidianEmbed(options: RemarkEmbedOptions) {
   return async (tree: Root) => {
     const promises: Promise<void>[] = [];
 
     visit(tree, "text", (node, index, parent) => {
-      if (!parent || typeof index !== "number") return;
-
-      const matches = Array.from(node.value.matchAll(embedRegex));
-      if (matches.length === 0) return;
-
-      let lastIndex = 0;
-      const newNodes: RootContent[] = [];
-
-      for (const match of matches) {
-        const [fullMatch, path] = match;
-        console.log("match", fullMatch, path);
-        const start = match.index;
-
-        if (start > lastIndex) {
-          newNodes.push({
-            type: "text",
-            value: node.value.slice(lastIndex, start),
-          });
-        }
-
-        const promise = (async () => {
-          const content = await options.resolveContent(path);
-          if (!content) {
-            newNodes.push({
-              type: "text",
-              value: `Failed to embed: ${path}`,
-            });
-            return;
-          }
-
-          const embeddedTree = unified().use(remarkParse).parse(content);
-
-          newNodes.push(...embeddedTree?.children);
-        })();
-
-        promises.push(promise);
-        lastIndex = start + fullMatch.length;
+      if (node.value.includes("![[")) {
+        promises.push(processEmbed(node, parent, index, options));
       }
-
-      if (lastIndex < node.value.length) {
-        newNodes.push({
-          type: "text",
-          value: node.value.slice(lastIndex),
-        });
-      }
-
-      console.log("new ", newNodes);
-      parent.children.splice(index, 1, ...newNodes);
     });
 
     await Promise.all(promises);

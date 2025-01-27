@@ -21,7 +21,7 @@ export function buildNavTree(
     let nested: NavTree = {
       [last]: {
         label: entry.data.title,
-        slug: `/${slugify(entry.data.repo)}/${entry.data.slug}`,
+        slug: entry.data.slug,
       },
     };
     while (segments.length > 0) {
