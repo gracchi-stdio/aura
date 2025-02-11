@@ -1,7 +1,9 @@
 ---
 import { getCollection } from "astro:content";
 import { getConfig } from "../lib/config";
-import { buildNavTree, slugify, getRelativeTree } from "@/utils";
+import { slugify } from "@/utils";
+import { logger } from "@/lib/logger";
+
 const config = getConfig();
 
 // Load all collections
@@ -9,7 +11,7 @@ const collections = await getCollection("obsidianNotes");
 const repoCol = collections.filter(
   (collection) => collection.data.repo === config.vaults[0].repo,
 );
-console.log(collections);
+logger.debug("Index Page Config: ", config);
 ---
 
 <!doctype html>

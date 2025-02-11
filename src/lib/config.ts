@@ -1,13 +1,18 @@
 import config from "@/config.yml";
 import type { VaultConfig, Config } from "@/types";
-
+import { logger } from "@/lib/logger";
 const DEFAULT_CONFIG: Config = {
   app: { name: "Aura Note" },
   vaults: [],
 };
 
 export function getConfig(): Config {
-  if (!config) return DEFAULT_CONFIG;
+  if (!config) {
+    logger.warn("No config.yml found or invalid, using default configuration.");
+    return DEFAULT_CONFIG;
+  }
+
+  logger.info("Configuration loaded successfully: ", config);
   return {
     app: {
       name: config.app?.name?.trim() || DEFAULT_CONFIG.app.name,

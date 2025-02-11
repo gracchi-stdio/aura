@@ -20,7 +20,7 @@ import { eventManager } from "./events";
 import { v4 as uuidv4 } from "uuid";
 import remarkGfm from "remark-gfm";
 import type { Context } from "vm";
-
+import remarkHTMLComment from "remark-remove-comments";
 const { vaults } = getConfig();
 
 type ContentMapEntry = {
@@ -97,11 +97,13 @@ async function processVault(vault: VaultConfig, context: Context) {
       const permalinks = Array.from(contentMap.keys());
       const processedContent = await unified()
         .use(remarkParse)
+
         .use(remarkObsidianEmbed, {
           getContent: (fileName) => contentMap.get(fileName)?.content || null,
           maxDepth: 3,
         })
         .use(remarkGfm)
+        .use(remarkHTMLComment)
         .use(wikiLinkPlugin, {
           permalinks,
           aliasDivider: "|",

@@ -1,5 +1,6 @@
 import { Octokit } from "@octokit/rest";
 import type { VaultFile, VaultConfig } from "@/types";
+import { logger } from "./logger";
 
 const octokit = new Octokit({
   auth: import.meta.env.GITHUB_TOKEN,
@@ -42,7 +43,10 @@ export async function getVaultStructure(
         return a.type === "dir" ? -1 : 1;
       }) as VaultFile[];
   } catch (error) {
-    console.error(`Error fetching vault structure for ${path}:`, error);
+    logger.error(
+      `Error fetching vault structure for repo: ${repo}, branch: ${branch}, path: ${path}: `,
+      error,
+    );
     return [];
   }
 }
@@ -51,7 +55,7 @@ export async function getFileContent(
   config: VaultConfig,
   filePath: string,
 ): Promise<string | null> {
-  const { owner, repo, branch = "main" } = config;
+  const { owner, repo, branch = "main", path = "" } = config;
 
   try {
     const { data } = await octokit.repos.getContent({
@@ -67,8 +71,10 @@ export async function getFileContent(
 
     return null;
   } catch (error) {
-    console.error(`Error fatching file ${filePath}`, error);
-
+    logger.error(
+      `Error fetching vault structure for repo: ${repo}, branch: ${branch}, path: ${path}: `,
+      error,
+    );
     return null;
   }
 }
