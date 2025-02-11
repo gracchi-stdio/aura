@@ -33,7 +33,10 @@ type ContentMapEntry = {
 
 function getSlug(repo: string, path: string): string {
   let slug = getSlugFromPath(path.replace(/\.md$/, ""));
-  return `/${slugify(repo)}/${slug.replace(/\index$/, "")}`;
+  if (slug.endsWith("index")) slug = slug.replace("index", "");
+  return vaults.length > 1
+    ? `/${slugify(repo)}/${slug.replace(/\index$/, "")}`
+    : "/" + slug;
 }
 
 async function processVault(vault: VaultConfig, context: Context) {

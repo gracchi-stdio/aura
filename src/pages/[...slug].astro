@@ -4,6 +4,7 @@ import { getConfig } from "@/lib/config";
 import { getCollection } from "astro:content";
 import Layout from "@/layouts/Layout.astro";
 import { render } from "astro:content";
+import { logger } from "@/lib/logger";
 
 export const getStaticPaths = (async () => {
   const { vaults } = getConfig();
@@ -26,9 +27,10 @@ export const getStaticPaths = (async () => {
         });
       }
     } catch (error) {
-      console.error(`The vault collection: ${vault.repo} not available`);
+      logger.error(`The vault collection: ${vault.repo} not available`);
     }
   }
+  logger.debug("Paths: ", paths);
   return paths;
 }) satisfies GetStaticPaths;
 

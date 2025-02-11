@@ -2,6 +2,10 @@ import type { NavItem, NavTree } from "@/types/nav";
 import type { CollectionEntry } from "astro:content";
 import { merge } from "ts-deepmerge";
 import { slugify } from ".";
+import { getConfig } from "@/lib/config";
+import { logger } from "@/lib/logger";
+const { vaults } = getConfig();
+const singleVaultMode = vaults.length === 1;
 
 export function buildNavTree(
   collection: CollectionEntry<"obsidianNotes">[],
@@ -27,7 +31,9 @@ export function buildNavTree(
     while (segments.length > 0) {
       const segment = segments.pop() || "";
 
-      nested = { [segment]: { label: segment, children: nested } };
+      nested = {
+        [segment.toLowerCase()]: { label: segment, children: nested },
+      };
     }
 
     return merge(acc, {
@@ -43,15 +49,24 @@ export function getRelativeTree(
   currentPath: string,
 ): NavTree {
   let relNav: NavTree = mainTree;
-
-  const currSegs = currentPath.split("/");
+  let currSegs = currentPath.split("/");
+  if (singleVaultMode) currSegs = [slugify(vaults[0].repo), ...currSegs];
   currSegs.pop();
 
-  currSegs.forEach((seg, idx) => {
-    if (!relNav[seg]?.children) return;
-    if (idx + 1 === currSegs.length) return;
-    relNav = relNav[seg].children;
-  });
+  if (Object.keys(mainTree).length === 0) {
+    logger.debug("getRelativeTree - Main tree is empty, returning empty nav.");
+    return {}; // Return empty nav if mainTree is empty
+  }
+
+  for (const seg of currSegs) {
+    if (relNav && relNav[seg]) {
+      // Check if relNav is still valid and segment exists in children
+      relNav = relNav[seg]?.children; // Move to the next level only if segment is found
+      logger.debug("relNavTree:", relNav, seg);
+    } else {
+      return relNav || {}; // If segment not found, return the current level or empty object if relNav became null
+    }
+  }
 
   return relNav;
 }

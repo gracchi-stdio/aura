@@ -4,15 +4,18 @@ import type { VaultConfig } from "@/types";
 import { buildNavTree, getRelativeTree, slugify } from "@/utils";
 import { getCollection } from "astro:content";
 import Footer from "@/components/Footer.astro";
+import { ClientRouter } from "astro:transitions";
+import { getConfig } from "@/lib/config";
 interface Props {
   vault: VaultConfig;
 }
 const { vault } = Astro.props;
 const currentPath = Astro.url.pathname.slice(1);
 const firstSegment = currentPath.split("/")[0];
+const singleVaultMode = getConfig().vaults.length === 1;
 const collection = await getCollection(
   "obsidianNotes",
-  (entry) => slugify(entry.data.repo) === firstSegment,
+  (entry) => singleVaultMode || slugify(entry.data.repo) === firstSegment,
 );
 const absoluteTree = buildNavTree(collection);
 const navTree = getRelativeTree(absoluteTree, currentPath);
@@ -25,6 +28,7 @@ const navTree = getRelativeTree(absoluteTree, currentPath);
     <meta name="viewport" content="width=device-width initial-scale=1.0" />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <meta name="generator" content={Astro.generator} />
+    <ClientRouter />
     <title>{vault.label}</title>
   </head>
   <body class="min-h-screen bg-base-200">
@@ -60,7 +64,11 @@ const navTree = getRelativeTree(absoluteTree, currentPath);
         </div>
 
         <!-- Main content -->
-        <main class="flex-1 p-4 lg:py-6">
+        <main
+          class="flex-1 p-4 lg:py-6"
+          transition:name="main"
+          transition:animate="fade"
+        >
           <slot />
         </main>
 
@@ -72,7 +80,7 @@ const navTree = getRelativeTree(absoluteTree, currentPath);
         <aside
           class="bg-base-200 w-96 min-h-screen border-r-indigo-400 border-r"
         >
-          <div class="sticky top-0 z-20 hidden lg:block px-8 py-10">
+          <div class="sticky top-0 z-20 hidden lg:block px-8 py-10 bg-base-200">
             <h1 class="text-3xl">{vault?.label}</h1>
           </div>
           <div class="px-4">

@@ -9,21 +9,38 @@ interface Props {
 const { navTree } = Astro.props;
 const currentPath = Astro.url.pathname.split("/");
 const pathLength = currentPath.length;
-const [innerTree] = Object.values(navTree);
+const isFlatTree = Object.keys(navTree).every((key) => key.endsWith(".md"));
+let processedNavTree: NavTree;
+let backlink = "";
 
-const backlink = `
-<li>
-<a href="/${currentPath[1]}">
-<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 19V5m10 1l-6 6l6 6m-6-6h14"/></svg>
-</a>
-        </li>`;
+logger.debug("Navigator -> ", navTree);
+if (isFlatTree) {
+  processedNavTree = navTree; // Treat navTree as flat
+  backlink = ""; // No backlink in flat mode
+} else {
+  if (currentPath.length <= 2) {
+    processedNavTree = navTree; // Use top-level navTree at root path
+  } else {
+    const innerTree = navTree[Object.keys(navTree)[0]]; // Get the first key's value
+    processedNavTree = innerTree?.children || {}; // Use children for subpaths
+  }
+}
+backlink =
+  pathLength > 2
+    ? `<li>
+    <a href="/">
+      <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 19V5m10 1l-6 6l6 6m-6-6h14"/></svg>
+    </a>
+  </li>`
+    : "";
+
 function traverse(tree: NavTree): string {
   return Object.entries(tree)
     .map(([key, node]) => {
       if (!node.children || Object.keys(node.children).length === 0) {
         return `
         <li>
-<a href="${node.slug}">${node.label}</a>
+          <a href="${node.slug}">${node.label}</a>
         </li>
       `;
       }
@@ -42,15 +59,8 @@ function traverse(tree: NavTree): string {
     .join("");
 }
 
-const htmlContent =
-  (pathLength > 3 ? backlink : "") + traverse(innerTree?.children || {});
-
-logger.debug("Navbar currentPath: ", currentPath);
+const htmlContent = backlink + traverse(processedNavTree);
 ---
-
-<script define:vars={{ currentPath }}>
-  console.log(currentPath);
-</script>
 
 <ul
   class="menu menu-lg bg-base-200 rounded-box w-full"
