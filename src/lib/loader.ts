@@ -118,7 +118,7 @@ async function processVault(vault: VaultConfig, context: Context) {
           handlers: {
             image(_, node) {
               const url = node.url;
-              if (/\.(mp4|webm|ogg)$/.test(url)) {
+              if (/\.(mp4|webm|ogg|mov)$/.test(url)) {
                 return {
                   type: "element",
                   tagName: "video",

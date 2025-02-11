@@ -9,6 +9,7 @@ import { getConfig } from "@/lib/config";
 interface Props {
   vault: VaultConfig;
 }
+
 const { vault } = Astro.props;
 const currentPath = Astro.url.pathname.slice(1);
 const firstSegment = currentPath.split("/")[0];
