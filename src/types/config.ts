@@ -9,6 +9,7 @@ export type VaultConfig = {
 export type Config = {
   app: {
     name: string;
+    unavailable?: boolean;
   };
   vaults: VaultConfig[];
 };

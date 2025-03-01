@@ -1,22 +1,28 @@
 ---
 import Navbar from "@/components/Navbar.astro";
+import Maintenance from "@/components/Maintenance.astro"
 import type { VaultConfig } from "@/types";
 import { buildNavTree, getRelativeTree, slugify } from "@/utils";
-import { getCollection } from "astro:content";
+import { getCollection, type CollectionEntry } from "astro:content";
 import Footer from "@/components/Footer.astro";
 import { ClientRouter } from "astro:transitions";
 import { getConfig } from "@/lib/config";
 interface Props {
   vault: VaultConfig;
 }
-
+type NoteType = CollectionEntry<"obsidianNotes">;
 const { vault } = Astro.props;
 const currentPath = Astro.url.pathname.slice(1);
 const firstSegment = currentPath.split("/")[0];
-const singleVaultMode = getConfig().vaults.length === 1;
+const {
+  vaults,
+  app: { unavailable },
+} = getConfig();
+const singleVaultMode = vaults.length === 1;
 const collection = await getCollection(
   "obsidianNotes",
-  (entry) => singleVaultMode || slugify(entry.data.repo) === firstSegment,
+  (entry: NoteType) =>
+    singleVaultMode || slugify(entry.data.repo) === firstSegment,
 );
 const absoluteTree = buildNavTree(collection);
 const navTree = getRelativeTree(absoluteTree, currentPath);
@@ -33,6 +39,8 @@ const navTree = getRelativeTree(absoluteTree, currentPath);
     <title>{vault.label}</title>
   </head>
   <body class="min-h-screen bg-base-200">
+    {unavailable ? 
+<Maintenance /> : 
     <div class="drawer lg:drawer-open">
       <input id="drawer-toggle" type="checkbox" class="drawer-toggle" />
 
@@ -91,5 +99,6 @@ const navTree = getRelativeTree(absoluteTree, currentPath);
         </aside>
       </div>
     </div>
+}
   </body>
 </html>

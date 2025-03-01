@@ -1,21 +1,26 @@
 import config from "@/config.yml";
 import type { VaultConfig, Config } from "@/types";
 import { logger } from "@/lib/logger";
+import { env } from "./env";
 const DEFAULT_CONFIG: Config = {
-  app: { name: "Aura Note" },
+  app: { name: "Aura Note", unavailable: false },
   vaults: [],
 };
 
 export function getConfig(): Config {
   if (!config) {
     logger.warn("No config.yml found or invalid, using default configuration.");
-    return DEFAULT_CONFIG;
+    return {
+      ...DEFAULT_CONFIG,
+      app: { ...DEFAULT_CONFIG.app, unavailable: env.APP_UNAVAILABLE },
+    };
   }
 
-  logger.info("Configuration loaded successfully: ", config);
+  logger.info("App env unavailable", env.APP_UNAVAILABLE);
   return {
     app: {
       name: config.app?.name?.trim() || DEFAULT_CONFIG.app.name,
+      unavailable: env.APP_UNAVAILABLE || DEFAULT_CONFIG.app.unavailable,
     },
     vaults: Array.isArray(config.vaults)
       ? config.vaults.filter(isValidVaultConfig).map(normalizeVaultConfig)
