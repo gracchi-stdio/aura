@@ -10,6 +10,7 @@ export const NoteSchema = z.object({
   path: z.string(),
   uuid: z.string(),
   nav: z.boolean().optional(),
+  hideTitle: z.boolean().optional(),
   shortTitle: z.string().nullable().optional(),
   repo: z.string(),
   createdAt: z.date().nullable().optional(),

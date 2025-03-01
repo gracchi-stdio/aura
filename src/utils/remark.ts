@@ -3,7 +3,6 @@ import { visit } from "unist-util-visit";
 import type { Parent } from "unist";
 import type { Root, RootContent, Text } from "mdast";
 import type { Image } from "mdast";
-import { type } from "os";
 import { unified } from "unified";
 import remarkParse from "node_modules/remark-parse/lib";
 import remarkGfm from "remark-gfm";
@@ -39,7 +38,7 @@ export function remarkGrid() {
         data: {
           hName: "div",
           hProperties: {
-            className: "grid grid-cols-1 md:grid-cols-2 2xl:grid-cols-4 gap-4",
+            className: "grid grid-cols-1 md:grid-cols-2 4xl:grid-cols-4 gap-4",
           },
         },
         children: columns.map((columnImages) => ({

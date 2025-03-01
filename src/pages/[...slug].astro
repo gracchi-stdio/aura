@@ -38,14 +38,19 @@ export const getStaticPaths = (async () => {
 
 const { entry, vault } = Astro.props;
 const { Content } = await render(entry);
+logger.debug("Frontmatter: ", entry.data);
 ---
 
 <Layout {vault}>
-  <article class="max-w-4xl mx-auto px-4">
+  <article class="max-w-4xl mx-auto px-4 pt-4 md:pt-8">
     <div class="mb-8">
-      <h1 class="text-2xl text-base-content font-bold mb-4">
-        {entry.data.title}
-      </h1>
+      {
+        entry.data?.hideTitle ? null : (
+          <h1 class="text-2xl text-base-content font-bold mb-4">
+            {entry.data.title}
+          </h1>
+        )
+      }
       <!-- { -->
       <!--   entry.data.tags && ( -->
       <!--     <div class="flex flex-wrap gap-2"> -->

@@ -1,9 +1,10 @@
 import { Octokit } from "@octokit/rest";
 import type { VaultFile, VaultConfig } from "@/types";
 import { logger } from "./logger";
+import { env } from "./env";
 
 const octokit = new Octokit({
-  auth: import.meta.env.GITHUB_TOKEN,
+  auth: env.GITHUB_TOKEN,
 });
 
 export async function getVaultStructure(

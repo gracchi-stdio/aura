@@ -7,6 +7,7 @@ import remarkParse from "remark-parse";
 import remarkRehype from "remark-rehype";
 import rehypeStringify from "rehype-stringify";
 import wikiLinkPlugin from "remark-wiki-link";
+import remarkAttributes from "remark-attributes";
 import { tagManager } from "./tags";
 import {
   parseContentTags,
@@ -86,6 +87,7 @@ async function processVault(vault: VaultConfig, context: Context) {
           uuid,
           tags: tags,
           repo: vault.repo,
+          hideTitle: frontmatter?.hideTitle || false,
           createdAt: frontmatter?.createdAt || null,
           updatedAt: frontmatter?.updatedAt || null,
           draft: frontmatter?.draft,
@@ -100,11 +102,11 @@ async function processVault(vault: VaultConfig, context: Context) {
       const permalinks = Array.from(contentMap.keys());
       const processedContent = await unified()
         .use(remarkParse)
-
         .use(remarkObsidianEmbed, {
           getContent: (fileName) => contentMap.get(fileName)?.content || null,
           maxDepth: 3,
         })
+        .use(remarkAttributes)
         .use(remarkGfm)
         .use(remarkHTMLComment)
         .use(wikiLinkPlugin, {
